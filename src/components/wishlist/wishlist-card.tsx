@@ -172,9 +172,29 @@ export function WishlistCard({
 
       {lightboxOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
           onClick={() => setLightboxOpen(false)}
         >
+          {images.length > 1 && (
+            <>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="fixed left-4 top-1/2 -translate-y-1/2 h-12 w-12 z-10"
+                onClick={(e) => { e.stopPropagation(); setImgIndex((p) => (p === 0 ? images.length - 1 : p - 1)); }}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="fixed right-4 top-1/2 -translate-y-1/2 h-12 w-12 z-10"
+                onClick={(e) => { e.stopPropagation(); setImgIndex((p) => (p === images.length - 1 ? 0 : p + 1)); }}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+            </>
+          )}
           <div
             className="relative max-h-[90vh] max-w-[90vw]"
             onClick={(e) => e.stopPropagation()}
@@ -187,34 +207,16 @@ export function WishlistCard({
               className="rounded-lg object-contain max-h-[85vh] w-auto h-auto"
             />
             {images.length > 1 && (
-              <>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 h-10 w-10"
-                  onClick={() => setImgIndex((p) => (p === 0 ? images.length - 1 : p - 1))}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10"
-                  onClick={() => setImgIndex((p) => (p === images.length - 1 ? 0 : p + 1))}
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                  {images.map((_, i) => (
-                    <span
-                      key={i}
-                      className={`w-2 h-2 rounded-full ${
-                        i === imgIndex ? "bg-white" : "bg-white/50"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                {images.map((_, i) => (
+                  <span
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${
+                      i === imgIndex ? "bg-white" : "bg-white/50"
+                    }`}
+                  />
+                ))}
+              </div>
             )}
             <Button
               variant="secondary"

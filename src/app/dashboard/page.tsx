@@ -24,7 +24,8 @@ export default function DashboardPage() {
   const { data: budgets = [] } = useBudgets();
   const { data: customCategories } = useCategories();
   const categories = customCategories && customCategories.length > 0
-    ? customCategories
+    ? DEFAULT_CATEGORIES.map((def) => customCategories.find((c) => c.id === def.id) ?? def)
+        .concat(customCategories.filter((c) => !DEFAULT_CATEGORIES.some((d) => d.id === c.id)))
     : DEFAULT_CATEGORIES;
 
   const totalValue = items.reduce((sum, i) => sum + (i.price ?? 0), 0);
@@ -40,6 +41,7 @@ export default function DashboardPage() {
         .filter((i) => i.category === cat.id && !i.isPurchased)
         .reduce((sum, i) => sum + (i.price ?? 0), 0),
       color: cat.color,
+      fill: cat.color,
     }))
     .filter((c) => c.value > 0);
 

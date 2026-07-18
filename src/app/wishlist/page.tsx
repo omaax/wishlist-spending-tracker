@@ -6,13 +6,7 @@ import { useItems, useDeleteItem, useUpdateItem, useAddPurchaseRecord, useDelete
 import { WishlistCard } from "@/components/wishlist/wishlist-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { FilterDropdown } from "@/components/ui/filter-dropdown";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Pagination } from "@/components/ui/pagination";
 import { Plus, Search, Download, Upload } from "lucide-react";
@@ -22,7 +16,7 @@ import { exportData, downloadJson, uploadJson } from "@/lib/export-import";
 import { importData } from "@/lib/export-import";
 import { toast } from "sonner";
 import type { WishlistItem, PurchaseRecord } from "@/lib/types";
-import { generateId } from "@/lib/utils";
+import { generateId, sortCategories } from "@/lib/utils";
 
 const purchasingInFlight = new Set<string>();
 
@@ -34,9 +28,9 @@ export default function WishlistPage() {
   const addPurchaseRecord = useAddPurchaseRecord();
   const deletePurchaseRecord = useDeletePurchaseRecord();
   const { data: purchaseHistory = [] } = usePurchaseHistory();
-  const categories = customCategories && customCategories.length > 0
+  const categories = sortCategories(customCategories && customCategories.length > 0
     ? customCategories
-    : DEFAULT_CATEGORIES;
+    : DEFAULT_CATEGORIES);
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -53,7 +47,7 @@ export default function WishlistPage() {
       const vh = window.innerHeight;
       const gridTop = gridRef.current?.getBoundingClientRect().top ?? 160;
       const available = vh - gridTop - 72;
-      const cardH = 260;
+      const cardH = 300;
       const rows = Math.max(1, Math.floor((available + 8) / (cardH + 8)));
       const cols = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1;
       setPageSize(rows * cols);
@@ -200,52 +194,55 @@ export default function WishlistPage() {
             className="pl-8"
           />
         </div>
-        <Select value={categoryFilter} onValueChange={(v) => v && setCategoryFilter(v)}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Category">{(val) => val === "all" ? "All Categories" : categories.find((c) => c.id === val)?.name ?? val}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={priorityFilter} onValueChange={(v) => v && setPriorityFilter(v)}>
-          <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="Priority" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Priorities</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={purchasedFilter} onValueChange={(v) => v && setPurchasedFilter(v)}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Items</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="purchased">Purchased</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={(v) => v && setSort(v)}>
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FilterDropdown
+          value={categoryFilter}
+          onValueChange={setCategoryFilter}
+          placeholder="Category"
+          className="w-[140px]"
+          options={[
+            { value: "all", label: "All Categories" },
+            ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+          ]}
+        />
+        <FilterDropdown
+          value={priorityFilter}
+          onValueChange={setPriorityFilter}
+          placeholder="Priority"
+          className="w-[130px]"
+          options={[
+            { value: "all", label: "All Priorities" },
+            { value: "high", label: "High" },
+            { value: "medium", label: "Medium" },
+            { value: "low", label: "Low" },
+          ]}
+          renderValue={(val) =>
+            val === "all" ? "All Priorities" : val.charAt(0).toUpperCase() + val.slice(1)
+          }
+        />
+        <FilterDropdown
+          value={purchasedFilter}
+          onValueChange={setPurchasedFilter}
+          placeholder="Status"
+          className="w-[140px]"
+          options={[
+            { value: "all", label: "All Items" },
+            { value: "pending", label: "Pending" },
+            { value: "purchased", label: "Purchased" },
+          ]}
+          renderValue={(val) =>
+            val === "all" ? "All Items" : val.charAt(0).toUpperCase() + val.slice(1)
+          }
+        />
+        <FilterDropdown
+          value={sort}
+          onValueChange={setSort}
+          placeholder="Sort by"
+          className="w-[160px]"
+          options={SORT_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+          renderValue={(val) =>
+            SORT_OPTIONS.find((o) => o.value === val)?.label ?? val
+          }
+        />
       </div>
 
       {filteredItems.length === 0 ? (

@@ -6,7 +6,7 @@ import type { WishlistItem, Category, Budget, PurchaseRecord } from "./types";
 
 // Wishlist Items
 export function useItems() {
-  return useQuery({ queryKey: ["items"], queryFn: db.getAllItems });
+  return useQuery({ queryKey: ["items"], queryFn: db.getAllItems, staleTime: 0 });
 }
 
 export function useItem(id: string) {

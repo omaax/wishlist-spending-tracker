@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { Category } from "@/lib/types"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -22,6 +23,10 @@ export function formatDate(timestamp: number): string {
 
 export function generateId(): string {
   return crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function sortCategories(cats: Category[]): Category[] {
+  return [...cats].sort((a, b) => (a.id === "other" ? 1 : b.id === "other" ? -1 : 0))
 }
 
 export function getCurrentMonth(): string {

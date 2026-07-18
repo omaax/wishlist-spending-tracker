@@ -1,9 +1,18 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import {
+  Pie,
+  PieChart,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import { formatCurrency } from "@/lib/utils";
 
 interface CategoryChartProps {
-  data: { name: string; value: number; color: string }[];
+  data: { name: string; value: number; color: string; fill: string }[];
 }
 
 export function CategoryChart({ data }: CategoryChartProps) {
@@ -14,28 +23,29 @@ export function CategoryChart({ data }: CategoryChartProps) {
       </div>
     );
   }
+
+  const config = Object.fromEntries(
+    data.map((d) => [d.name, { label: d.name, color: d.color }])
+  );
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ChartContainer config={config} className="mx-auto aspect-square max-h-[300px]">
       <PieChart>
+        <ChartTooltip
+          content={<ChartTooltipContent formatter={(v) => formatCurrency(v)} />}
+        />
         <Pie
           data={data}
-          cx="50%"
-          cy="50%"
+          dataKey="value"
+          nameKey="name"
           innerRadius={60}
           outerRadius={100}
           paddingAngle={2}
-          dataKey="value"
-          label={(props: { name?: string; percent?: number }) =>
-            `${props.name ?? ""} ${((props.percent ?? 0) * 100).toFixed(0)}%`
-          }
-        >
-          {data.map((entry, index) => (
-            <Cell key={index} fill={entry.color} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => `$${Number(value ?? 0).toFixed(2)}`} />
-        <Legend />
+        />
+        <ChartLegend
+          content={<ChartLegendContent />}
+        />
       </PieChart>
-    </ResponsiveContainer>
+    </ChartContainer>
   );
 }

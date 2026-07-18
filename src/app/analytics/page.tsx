@@ -1,25 +1,25 @@
 "use client";
 
 import { useMemo } from "react";
-import { useItems, usePurchaseHistory } from "@/lib/query-hooks";
-import { useCategories } from "@/lib/query-hooks";
+import { useItems, usePurchaseHistory, useCategories } from "@/lib/query-hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import {
-  BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
   Pie,
-  Cell,
-  Legend,
+  PieChart,
+  BarChart,
   LineChart,
   Line,
-} from "recharts";
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
 import { DEFAULT_CATEGORIES } from "@/lib/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -28,7 +28,8 @@ export default function AnalyticsPage() {
   const { data: purchaseHistory = [] } = usePurchaseHistory();
   const { data: customCategories } = useCategories();
   const categories = customCategories && customCategories.length > 0
-    ? customCategories
+    ? DEFAULT_CATEGORIES.map((def) => customCategories.find((c) => c.id === def.id) ?? def)
+        .concat(customCategories.filter((c) => !DEFAULT_CATEGORIES.some((d) => d.id === c.id)))
     : DEFAULT_CATEGORIES;
 
   const categorySpending = useMemo(() => {
@@ -41,6 +42,7 @@ export default function AnalyticsPage() {
         name: cat.name,
         value: map.get(cat.id) ?? 0,
         color: cat.color,
+        fill: cat.color,
       }))
       .filter((c) => c.value > 0);
   }, [purchaseHistory, categories]);
@@ -55,6 +57,7 @@ export default function AnalyticsPage() {
         name: cat.name,
         count: map.get(cat.id) ?? 0,
         color: cat.color,
+        fill: cat.color,
       }))
       .filter((c) => c.count > 0);
   }, [purchaseHistory, categories]);
@@ -79,15 +82,28 @@ export default function AnalyticsPage() {
 
   const categoryWishlistValue = useMemo(() => {
     return categories
-      .map((cat) => ({
-        name: cat.name,
-        value: items
-          .filter((i) => i.category === cat.id && !i.isPurchased)
-          .reduce((sum, i) => sum + (i.price ?? 0), 0),
-        color: cat.color,
-      }))
-      .filter((c) => c.value > 0);
+      .map((cat) => {
+        const catItems = items.filter((i) => i.category === cat.id && !i.isPurchased);
+        return {
+          name: cat.name,
+          count: catItems.length,
+          value: catItems.reduce((sum, i) => sum + (i.price ?? 0), 0),
+          color: cat.color,
+          fill: cat.color,
+        };
+      })
+      .filter((c) => c.count > 0);
   }, [items, categories]);
+
+  const spendingConfig = Object.fromEntries(
+    categorySpending.map((d) => [d.name, { label: d.name, color: d.color }])
+  );
+  const countConfig = Object.fromEntries(
+    categoryCount.map((d) => [d.name, { label: d.name, color: d.color }])
+  );
+  const wishlistConfig = Object.fromEntries(
+    categoryWishlistValue.map((d) => [d.name, { label: d.name, color: d.color }])
+  );
 
   return (
     <div className="space-y-6">
@@ -112,28 +128,22 @@ export default function AnalyticsPage() {
                     No purchase data yet
                   </p>
                 ) : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ChartContainer config={spendingConfig} className="mx-auto aspect-square max-h-[350px]">
                     <PieChart>
+                      <ChartTooltip
+                        content={<ChartTooltipContent formatter={(v) => formatCurrency(v)} />}
+                      />
                       <Pie
                         data={categorySpending}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={120}
                         dataKey="value"
-                        label={(props: { name?: string; percent?: number }) =>
-                          `${props.name ?? ""} ${((props.percent ?? 0) * 100).toFixed(0)}%`
-                        }
-                      >
-                        {categorySpending.map((e, i) => (
-                          <Cell key={i} fill={e.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(v) => formatCurrency(Number(v ?? 0))}
+                        nameKey="name"
+                        outerRadius={120}
                       />
-                      <Legend />
+                      <ChartLegend
+                        content={<ChartLegendContent />}
+                      />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 )}
               </CardContent>
             </Card>
@@ -147,19 +157,24 @@ export default function AnalyticsPage() {
                     No purchase data yet
                   </p>
                 ) : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ChartContainer config={countConfig} className="h-[350px] w-full">
                     <BarChart data={categoryCount}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Bar dataKey="count" name="Items Purchased">
-                        {categoryCount.map((e, i) => (
-                          <Cell key={i} fill={e.color} />
-                        ))}
-                      </Bar>
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
+                      />
+                      <Bar
+                        dataKey="count"
+                        name="Items Purchased"
+                        shape={(props: any) => {
+                          const { x, y, width, height, payload } = props;
+                          return <rect x={x} y={y} width={width} height={height} fill={payload.fill} rx={4} />;
+                        }}
+                      />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 )}
               </CardContent>
             </Card>
@@ -170,7 +185,7 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Wishlist Value by Category</CardTitle>
+                <CardTitle>Wishlist Items by Category</CardTitle>
               </CardHeader>
               <CardContent>
                 {categoryWishlistValue.length === 0 ? (
@@ -178,28 +193,22 @@ export default function AnalyticsPage() {
                     No items in wishlist
                   </p>
                 ) : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ChartContainer config={wishlistConfig} className="mx-auto aspect-square max-h-[350px]">
                     <PieChart>
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
+                      />
                       <Pie
                         data={categoryWishlistValue}
-                        cx="50%"
-                        cy="50%"
+                        dataKey="count"
+                        nameKey="name"
                         outerRadius={120}
-                        dataKey="value"
-                        label={(props: { name?: string; percent?: number }) =>
-                          `${props.name ?? ""} ${((props.percent ?? 0) * 100).toFixed(0)}%`
-                        }
-                      >
-                        {categoryWishlistValue.map((e, i) => (
-                          <Cell key={i} fill={e.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(v) => formatCurrency(Number(v ?? 0))}
                       />
-                      <Legend />
+                      <ChartLegend
+                        content={<ChartLegendContent />}
+                      />
                     </PieChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 )}
               </CardContent>
             </Card>
@@ -213,21 +222,24 @@ export default function AnalyticsPage() {
                     No items in wishlist
                   </p>
                 ) : (
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ChartContainer config={wishlistConfig} className="h-[350px] w-full">
                     <BarChart data={categoryWishlistValue}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip
-                        formatter={(v) => formatCurrency(Number(v ?? 0))}
+                      <YAxis allowDecimals={false} />
+                      <ChartTooltip
+                        content={<ChartTooltipContent />}
                       />
-                      <Bar dataKey="value" name="Total Value">
-                        {categoryWishlistValue.map((e, i) => (
-                          <Cell key={i} fill={e.color} />
-                        ))}
-                      </Bar>
+                      <Bar
+                        dataKey="count"
+                        name="Items"
+                        shape={(props: any) => {
+                          const { x, y, width, height, payload } = props;
+                          return <rect x={x} y={y} width={width} height={height} fill={payload.fill} rx={4} />;
+                        }}
+                      />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 )}
               </CardContent>
             </Card>
@@ -245,24 +257,26 @@ export default function AnalyticsPage() {
                   No purchase data yet
                 </p>
               ) : (
-                <ResponsiveContainer width="100%" height={400}>
+                <ChartContainer
+                  config={{ total: { label: "Spending", color: "hsl(var(--primary))" } }}
+                  className="h-[400px] w-full"
+                >
                   <LineChart data={monthlyTrends}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" />
                     <YAxis />
-                    <Tooltip
-                      formatter={(v) => formatCurrency(Number(v ?? 0))}
+                    <ChartTooltip
+                      content={<ChartTooltipContent formatter={(v) => formatCurrency(v)} />}
                     />
                     <Line
                       type="monotone"
                       dataKey="total"
-                      stroke="hsl(var(--primary))"
+                      stroke="var(--color-total)"
                       strokeWidth={2}
                       dot={{ r: 4 }}
-                      name="Spending"
                     />
                   </LineChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               )}
             </CardContent>
           </Card>

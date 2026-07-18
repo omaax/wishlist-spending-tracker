@@ -43,7 +43,7 @@ export function WishlistCard({
     <>
       <Card className="overflow-hidden transition-all hover:shadow-md flex flex-col">
       {images.length > 0 && (
-        <div className="relative h-40 w-full bg-muted cursor-pointer" onClick={() => setLightboxOpen(true)}>
+        <div className="relative h-46 w-full bg-muted cursor-pointer" onClick={() => setLightboxOpen(true)}>
           <Image
             src={images[imgIndex].blob}
             alt={item.name}
@@ -88,7 +88,7 @@ export function WishlistCard({
           )}
         </div>
       )}
-      <CardContent className="p-4 flex-1">
+      <CardContent className="px-4 py-2 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -126,7 +126,7 @@ export function WishlistCard({
           )}
         </p>
       </CardContent>
-      <CardFooter className="p-1 pt-0 flex flex-wrap gap-1 items-center mt-auto">
+      <CardFooter className="p-1 flex flex-wrap gap-1 items-center mt-auto">
         <Button
           variant="ghost"
           size="sm"

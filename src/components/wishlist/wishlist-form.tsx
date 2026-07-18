@@ -23,7 +23,7 @@ import {
 import { toast } from "sonner";
 import { ImageUpload } from "./image-upload";
 import type { WishlistItem, Category, Priority } from "@/lib/types";
-import { generateId } from "@/lib/utils";
+import { generateId, sortCategories } from "@/lib/utils";
 import { PRIORITIES, DEFAULT_CATEGORIES } from "@/lib/constants";
 import { useCategories, useAddCategory } from "@/lib/query-hooks";
 
@@ -39,9 +39,9 @@ export function WishlistForm({ initialData, onSave, onCancel }: WishlistFormProp
   const router = useRouter();
   const { data: customCategories } = useCategories();
   const addCategory = useAddCategory();
-  const categories = customCategories && customCategories.length > 0
+  const categories = sortCategories(customCategories && customCategories.length > 0
     ? customCategories
-    : DEFAULT_CATEGORIES;
+    : DEFAULT_CATEGORIES);
 
   const [name, setName] = useState(initialData?.name ?? "");
   const [url, setUrl] = useState(initialData?.url ?? "");

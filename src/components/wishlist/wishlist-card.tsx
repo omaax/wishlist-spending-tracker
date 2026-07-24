@@ -23,14 +23,12 @@ import Link from "next/link";
 
 interface WishlistCardProps {
   item: WishlistItem;
-  onToggleFavorite: () => void;
   onTogglePurchased: () => void;
   onDelete: () => void;
 }
 
 export function WishlistCard({
   item,
-  onToggleFavorite,
   onTogglePurchased,
   onDelete,
 }: WishlistCardProps) {
@@ -93,9 +91,9 @@ export function WishlistCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-semibold truncate">{item.name}</h3>
-              {item.isFavorite && (
+              {/* {item.isFavorite && (
                 <Heart className="h-4 w-4 fill-red-500 text-red-500 shrink-0" />
-              )}
+              )} */}
             </div>
             {item.price !== undefined ? (
               <p className="text-xl font-bold">{formatCurrency(item.price)}</p>
@@ -127,7 +125,7 @@ export function WishlistCard({
         </p>
       </CardContent>
       <CardFooter className="p-1 flex flex-wrap gap-1 items-center mt-auto">
-        <Button
+        {/* <Button
           variant="ghost"
           size="sm"
           className={`h-7 ${item.isFavorite ? "text-red-500" : ""}`}
@@ -138,7 +136,7 @@ export function WishlistCard({
           ) : (
             <Heart className="h-3.5 w-3.5" />
           )}
-        </Button>
+        </Button> */}
         <Button
           variant="ghost"
           size="sm"

@@ -66,7 +66,14 @@ export async function addCategory(category: Category): Promise<void> {
 
 export async function deleteCategory(id: string): Promise<void> {
   const db = await getDb();
-  await db.delete("categories", id);
+  const allItems = await db.getAll("items");
+  const toDelete = allItems.filter((i) => i.category === id);
+  const tx = db.transaction(["categories", "items"], "readwrite");
+  await tx.objectStore("categories").delete(id);
+  for (const item of toDelete) {
+    await tx.objectStore("items").delete(item.id);
+  }
+  await tx.done;
 }
 
 export async function getAllBudgets(): Promise<Budget[]> {

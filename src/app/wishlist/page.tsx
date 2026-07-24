@@ -35,7 +35,7 @@ export default function WishlistPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [purchasedFilter, setPurchasedFilter] = useState("all");
+  const [purchasedFilter, setPurchasedFilter] = useState("pending");
   const [sort, setSort] = useState("createdAt-desc");
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -102,10 +102,6 @@ export default function WishlistPage() {
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const paginatedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { if (page > totalPages) setPage(1); }, [page, totalPages]);
-
-  const handleToggleFavorite = (item: WishlistItem) => {
-    updateItem.mutate({ ...item, isFavorite: !item.isFavorite });
-  };
 
   const handleTogglePurchased = async (item: WishlistItem) => {
     if (purchasingInFlight.has(item.id)) return;
@@ -265,7 +261,6 @@ export default function WishlistPage() {
             <WishlistCard
               key={item.id}
               item={item}
-              onToggleFavorite={() => handleToggleFavorite(item)}
               onTogglePurchased={() => handleTogglePurchased(item)}
               onDelete={() => handleDelete(item.id)}
             />

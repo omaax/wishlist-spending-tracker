@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DEFAULT_CATEGORIES } from "@/lib/constants";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 export default function BudgetPage() {
@@ -31,6 +32,7 @@ export default function BudgetPage() {
 
   const [newLimit, setNewLimit] = useState("");
   const [newCategory, setNewCategory] = useState(categories[0]?.id ?? "other");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const currentMonth = getCurrentMonth();
 
   const monthlySpending = useMemo(() => {
@@ -63,10 +65,7 @@ export default function BudgetPage() {
     toast.success("Budget added");
   };
 
-  const handleDeleteBudget = (id: string) => {
-    deleteBudget.mutate(id);
-    toast.success("Budget removed");
-  };
+  const handleDeleteBudget = (id: string) => setDeleteTarget(id);
 
   const getCategoryName = (id: string) => categories.find((c) => c.id === id)?.name ?? id;
   const getCategoryColor = (id: string) => categories.find((c) => c.id === id)?.color ?? "#6b7280";
@@ -135,7 +134,7 @@ export default function BudgetPage() {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
-                        onClick={() => handleDeleteBudget(budget.id)}
+                        onClick={() => setDeleteTarget(budget.id)}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -200,6 +199,20 @@ export default function BudgetPage() {
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}
+        title="Delete Budget"
+        description="Are you sure you want to remove this budget? This action cannot be undone."
+        onConfirm={() => {
+          if (deleteTarget) {
+            deleteBudget.mutate(deleteTarget);
+            toast.success("Budget removed");
+            setDeleteTarget(null);
+          }
+        }}
+      />
     </div>
   );
 }

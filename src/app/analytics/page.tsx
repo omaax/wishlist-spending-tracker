@@ -95,6 +95,11 @@ export default function AnalyticsPage() {
       .filter((c) => c.count > 0);
   }, [items, categories]);
 
+  const totalSpent = purchaseHistory.reduce((sum, r) => sum + r.price, 0);
+  const totalWishlistValue = items
+    .filter((i) => !i.isPurchased)
+    .reduce((sum, i) => sum + (i.price ?? 0), 0);
+
   const spendingConfig = Object.fromEntries(
     categorySpending.map((d) => [d.name, { label: d.name, color: d.color }])
   );
@@ -117,6 +122,9 @@ export default function AnalyticsPage() {
         </TabsList>
 
         <TabsContent value="spending" className="space-y-6 mt-4">
+          <div className="text-lg font-semibold">
+            Total Spent: {formatCurrency(totalSpent)}
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -182,6 +190,9 @@ export default function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="wishlist" className="space-y-6 mt-4">
+          <div className="text-lg font-semibold">
+            Total Value: {formatCurrency(totalWishlistValue)}
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>

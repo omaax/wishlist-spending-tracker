@@ -10,7 +10,7 @@ import {
   DollarSign,
   ShoppingBag,
   TrendingUp,
-  Star,
+  FolderOpen,
   Wallet,
   BarChart3,
 } from "lucide-react";
@@ -31,7 +31,6 @@ export default function DashboardPage() {
   const totalValue = items.reduce((sum, i) => sum + (i.price ?? 0), 0);
   const totalSpent = purchaseHistory.reduce((sum, r) => sum + r.price, 0);
   const purchasedItems = items.filter((i) => i.isPurchased);
-  const favoriteItems = items.filter((i) => i.isFavorite);
   const pendingItems = items.filter((i) => !i.isPurchased);
 
   const categoryTotals = categories
@@ -100,10 +99,10 @@ export default function DashboardPage() {
           icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
         />
         <StatsCard
-          title="Favorites"
-          value={favoriteItems.length.toString()}
-          description="Pinned wishlist items"
-          icon={<Star className="h-4 w-4 text-muted-foreground" />}
+          title="Categories"
+          value={categories.length.toString()}
+          description="Available categories"
+          icon={<FolderOpen className="h-4 w-4 text-muted-foreground" />}
         />
         <StatsCard
           title="Monthly Spending"

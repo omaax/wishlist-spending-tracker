@@ -41,7 +41,7 @@ export function WishlistCard({
     <>
       <Card className="overflow-hidden transition-all hover:shadow-md flex flex-col">
       {images.length > 0 && (
-        <div className="relative h-46 w-full bg-muted cursor-pointer" onClick={() => setLightboxOpen(true)}>
+        <div className="relative h-42 w-full bg-muted cursor-pointer" onClick={() => setLightboxOpen(true)}>
           <Image
             src={images[imgIndex].blob}
             alt={item.name}
@@ -53,7 +53,7 @@ export function WishlistCard({
               <Button
                 variant="secondary"
                 size="icon"
-                className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-80"
+                className="absolute left-1 top-1/2 -translate-y-1/2 h-9 w-9 opacity-80"
                 onClick={(e) => {
                   e.stopPropagation();
                   setImgIndex((p) => (p === 0 ? images.length - 1 : p - 1));
@@ -64,7 +64,7 @@ export function WishlistCard({
               <Button
                 variant="secondary"
                 size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-80"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-9 w-9 opacity-80"
                 onClick={(e) => {
                   e.stopPropagation();
                   setImgIndex((p) => (p === images.length - 1 ? 0 : p + 1));
@@ -86,7 +86,7 @@ export function WishlistCard({
           )}
         </div>
       )}
-      <CardContent className="px-4 py-2 flex-1">
+      <CardContent className="px-4 py-3 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export function WishlistCard({
           </div>
         </div>
         {item.notes && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
             {item.notes}
           </p>
         )}

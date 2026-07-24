@@ -2,18 +2,11 @@
 
 import { useItems, usePurchaseHistory, useBudgets } from "@/lib/query-hooks";
 import { useCategories } from "@/lib/query-hooks";
-import { StatsCard } from "@/components/dashboard/stats-card";
+import { StatsCards } from "@/components/dashboard/stats-cards";
 import { CategoryChart } from "@/components/dashboard/category-chart";
+import { CategoryManager } from "@/components/ui/category-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, getCurrentMonth } from "@/lib/utils";
-import {
-  DollarSign,
-  ShoppingBag,
-  TrendingUp,
-  FolderOpen,
-  Wallet,
-  BarChart3,
-} from "lucide-react";
 import { DEFAULT_CATEGORIES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -79,52 +72,19 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <StatsCard
-          title="Total Wishlist Value"
-          value={formatCurrency(totalValue)}
-          description={`${pendingItems.length} pending items`}
-          icon={<DollarSign className="h-4 w-4 text-muted-foreground" />}
-        />
-        <StatsCard
-          title="Total Money Spent"
-          value={formatCurrency(totalSpent)}
-          description={`${purchasedItems.length} items purchased`}
-          icon={<ShoppingBag className="h-4 w-4 text-muted-foreground" />}
-        />
-        <StatsCard
-          title="Average Item Price"
-          value={items.length > 0 ? formatCurrency(totalValue / items.length) : "$0.00"}
-          description={`Across ${items.length} items`}
-          icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />}
-        />
-        <StatsCard
-          title="Categories"
-          value={categories.length.toString()}
-          description="Available categories"
-          icon={<FolderOpen className="h-4 w-4 text-muted-foreground" />}
-        />
-        <StatsCard
-          title="Monthly Spending"
-          value={formatCurrency(monthlySpending)}
-          description={
-            currentBudget
-              ? `${budgetProgress}% of $${currentBudget.limit} budget`
-              : "No budget set"
-          }
-          icon={<Wallet className="h-4 w-4 text-muted-foreground" />}
-        />
-        <StatsCard
-          title={mostExpensiveCategory ? mostExpensiveCategory.name : "Most Expensive"}
-          value={
-            mostExpensiveCategory
-              ? formatCurrency(mostExpensiveCategory.value)
-              : "-"
-          }
-          description={mostExpensiveCategory ? "Category total" : "No items yet"}
-          icon={<BarChart3 className="h-4 w-4 text-muted-foreground" />}
-        />
-      </div>
+      <StatsCards
+        totalValue={totalValue}
+        pendingItemsCount={pendingItems.length}
+        totalSpent={totalSpent}
+        purchasedItemsCount={purchasedItems.length}
+        itemsCount={items.length}
+        categoriesCount={categories.length}
+        monthlySpending={monthlySpending}
+        budgetLabel={currentBudget ? `${budgetProgress}% of $${currentBudget.limit} budget` : "No budget set"}
+        mostExpensiveCategoryName={mostExpensiveCategory?.name ?? ""}
+        mostExpensiveCategoryValue={mostExpensiveCategory?.value ?? 0}
+        hasData={mostExpensiveCategory !== null}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -171,7 +131,16 @@ export default function DashboardPage() {
             )}
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Manage Categories</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <CategoryManager />
+          </CardContent>
+        </Card>
       </div>
+
     </div>
   );
 }

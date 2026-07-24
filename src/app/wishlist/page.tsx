@@ -47,7 +47,7 @@ export default function WishlistPage() {
       const vh = window.innerHeight;
       const gridTop = gridRef.current?.getBoundingClientRect().top ?? 160;
       const available = vh - gridTop - 72;
-      const cardH = 300;
+      const cardH = 290;
       const rows = Math.max(1, Math.floor((available + 8) / (cardH + 8)));
       const cols = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 640 ? 2 : 1;
       setPageSize(rows * cols);

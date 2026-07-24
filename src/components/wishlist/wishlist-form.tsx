@@ -20,14 +20,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Trash2 } from "lucide-react";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { z } from "zod";
 import { toast } from "sonner";
 import { ImageUpload } from "./image-upload";
-import type { WishlistItem, Category, Priority } from "@/lib/types";
+import { CategoryManager } from "@/components/ui/category-manager";
+import type { WishlistItem, Priority } from "@/lib/types";
 import { generateId, sortCategories } from "@/lib/utils";
 import { PRIORITIES, DEFAULT_CATEGORIES } from "@/lib/constants";
-import { useCategories, useAddCategory, useDeleteCategory } from "@/lib/query-hooks";
+import { useCategories } from "@/lib/query-hooks";
 
 interface WishlistFormProps {
   initialData?: WishlistItem;
@@ -35,13 +35,16 @@ interface WishlistFormProps {
   onCancel?: () => void;
 }
 
-const CATEGORY_COLORS = ["#ef4444", "#3b82f6", "#8b5cf6", "#f59e0b", "#10b981", "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#6366f1"];
+const wishlistSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be under 100 characters"),
+  price: z.string().refine((v) => v === "" || (!isNaN(parseFloat(v)) && parseFloat(v) >= 0), "Price must be a valid positive number"),
+  url: z.string().url("Must be a valid URL").or(z.literal("")).optional(),
+  notes: z.string().max(400).optional(),
+})
 
 export function WishlistForm({ initialData, onSave, onCancel }: WishlistFormProps) {
   const router = useRouter();
   const { data: customCategories } = useCategories();
-  const addCategory = useAddCategory();
-  const deleteCategory = useDeleteCategory();
   const categories = sortCategories(customCategories && customCategories.length > 0
     ? customCategories
     : DEFAULT_CATEGORIES);
@@ -53,16 +56,17 @@ export function WishlistForm({ initialData, onSave, onCancel }: WishlistFormProp
   const [priority, setPriority] = useState<Priority>(initialData?.priority ?? "medium");
   const [notes, setNotes] = useState(initialData?.notes ?? "");
   const [images, setImages] = useState<{ blob: string; filename: string }[]>(initialData?.images ?? []);
-  const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
-  const [deleteCategoryTarget, setDeleteCategoryTarget] = useState<Category | null>(null);
   const [saving, setSaving] = useState(false);
   const [fetchingImage, setFetchingImage] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast.error("Please enter a name");
+
+    const result = wishlistSchema.safeParse({ name, price, url, notes });
+    if (!result.success) {
+      const firstError = result.error.issues[0];
+      toast.error(firstError.message);
       return;
     }
 
@@ -176,69 +180,7 @@ export function WishlistForm({ initialData, onSave, onCancel }: WishlistFormProp
                 <DialogTitle>Manage Categories</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                {categories.length > 0 && (
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {categories.map((cat) => {
-                      const isDefault = DEFAULT_CATEGORIES.some((d) => d.id === cat.id);
-                      return (
-                        <div
-                          key={cat.id}
-                          className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full shrink-0"
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span>{cat.name}</span>
-                            {isDefault && (
-                              <span className="text-xs text-muted-foreground">(default)</span>
-                            )}
-                          </div>
-                          {!isDefault && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-destructive"
-                              onClick={() => setDeleteCategoryTarget(cat)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-                <hr className="border-t" />
-                <div className="space-y-2">
-                  <Label htmlFor="new-cat">Add new category</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="new-cat"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="Category name"
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        if (newCategoryName.trim()) {
-                          const id = newCategoryName.toLowerCase().replace(/\s+/g, "-");
-                          const color = CATEGORY_COLORS[(customCategories?.length ?? 0) % CATEGORY_COLORS.length];
-                          addCategory.mutate({ id, name: newCategoryName.trim(), color });
-                          setCategory(id);
-                          setNewCategoryName("");
-                          setCategoryDialogOpen(false);
-                          toast.success(`Category "${newCategoryName.trim()}" added`);
-                        }
-                      }}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </div>
+                <CategoryManager />
               </div>
             </DialogContent>
           </Dialog>
@@ -309,8 +251,11 @@ export function WishlistForm({ initialData, onSave, onCancel }: WishlistFormProp
         <Textarea
           id="notes"
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Any additional details..."
+          onChange={(e) => {
+            const words = e.target.value.trim() ? e.target.value.trim().split(/\s+/).length : 0;
+            if (words <= 50) setNotes(e.target.value);
+          }}
+          placeholder="Any additional details... (max 50 words)"
           rows={3}
         />
       </div>
@@ -326,19 +271,6 @@ export function WishlistForm({ initialData, onSave, onCancel }: WishlistFormProp
         )}
       </div>
     </form>
-      <ConfirmDialog
-        open={deleteCategoryTarget !== null}
-        onOpenChange={(o) => { if (!o) setDeleteCategoryTarget(null); }}
-        title="Delete Category"
-        description={`Are you sure you want to delete "${deleteCategoryTarget?.name}"? All items in this category will also be deleted.`}
-        onConfirm={() => {
-          if (deleteCategoryTarget) {
-            deleteCategory.mutate(deleteCategoryTarget.id);
-            toast.success(`Category "${deleteCategoryTarget.name}" deleted`);
-            setDeleteCategoryTarget(null);
-          }
-        }}
-      />
     </>
   );
 }

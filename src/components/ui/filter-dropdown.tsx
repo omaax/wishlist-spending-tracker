@@ -44,16 +44,18 @@ function FilterDropdown({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "justify-between gap-1.5 font-normal data-[size=default]:h-8",
+              "justify-between gap-1.5 font-normal data-[size=default]:h-8 overflow-hidden",
               !selected && "text-muted-foreground",
               className
             )}
           >
-            {selected
-              ? renderValue
-                ? renderValue(value)
-                : selected.label
-              : placeholder}
+            <span className="truncate min-w-0">
+              {selected
+                ? renderValue
+                  ? renderValue(value)
+                  : selected.label
+                : placeholder}
+            </span>
             <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground" />
           </Button>
         }
